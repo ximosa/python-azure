@@ -1,0 +1,6 @@
+streamlit
+moviepy
+Pillow
+numpy
+requests
+azure-cognitiveservices-speech
