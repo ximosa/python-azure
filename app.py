@@ -9,7 +9,7 @@ import numpy as np
 import tempfile
 import requests
 from io import BytesIO
-from azure.cognitiveservices.speech import SpeechConfig, SpeechSynthesizer, AudioConfig
+from azure.cognitiveservices.speech import SpeechConfig, SpeechSynthesizer, AudioConfig, ResultReason
 
 st.set_page_config(
     page_title="video-creator",
@@ -144,21 +144,19 @@ def synthesize_azure(text, voice_name, output_file, subscription_key, region):
     synthesizer = SpeechSynthesizer(speech_config=speech_config, audio_config=audio_config)
     try:
         result = synthesizer.speak_text_async(text).get()
-        print(f"Resultado de la API de Azure (completo): {result}")  # <-- Imprimir el objeto result completo
-        if result.reason == 1: # SpeechSynthesisResult.Reason.SynthesizingAudioCompleted
-           print(f"Audio guardado en {output_file}")
-           return True, "Audio generado exitosamente"
-        elif result.reason == 4: # SpeechSynthesisResult.Reason.Canceled
+        if result.reason == ResultReason.SynthesizingAudioCompleted:
+          print(f"API Azure: Audio sintetizado con éxito, guardando en {output_file}")
+          return True, "Audio generado exitosamente"
+        elif result.reason == ResultReason.Canceled:
             cancellation_details = result.cancellation_details
-            print(f"Error al generar audio: {cancellation_details.error_details}")
+            print(f"API Azure: Error al generar audio: {cancellation_details.error_details}")
             return False, cancellation_details.error_details
         else:
-            print(f"Error al generar audio: {result.reason}")
-            return False, str(result.reason)
+           print(f"API Azure: Error inesperado al generar audio: {result.reason}")
+           return False, f"Error inesperado al generar audio: {result.reason}"
     except Exception as e:
-        print(f"Error inesperado: {e}")
+        print(f"API Azure: Error inesperado: {e}")
         return False, str(e)
-
 
 def create_simple_video(texto, nombre_salida, voz, logo_url, font_size, bg_color, text_color,
                  background_image, stretch_background):
@@ -186,7 +184,7 @@ def create_simple_video(texto, nombre_salida, voz, logo_url, font_size, bg_color
         for i, segmento in enumerate(segmentos_texto):
             logging.info(f"Procesando segmento {i+1} de {len(segmentos_texto)}")
             
-            temp_filename = f"temp_audio_{i}.mp3" # Cambiamos a MP3 para ver si hay incompatibilidad con WAV
+            temp_filename = f"temp_audio_{i}.mp3"
             archivos_temp.append(temp_filename)
             
             # Usar la función de Azure para generar audio
@@ -196,15 +194,10 @@ def create_simple_video(texto, nombre_salida, voz, logo_url, font_size, bg_color
 
             if not success:
                 raise Exception(f"Error al generar audio: {message}")
-            
-            print(f"Archivo de audio guardado en: {temp_filename}") # <-- Imprimir ruta del archivo de audio
            
-            
-            # Desactivamos el código de moviepy para centrarnos en la API de Azure
-            """
-            print("Intentando cargar audio con moviepy...") # Comprobar si llega a este punto
+            print(f"Cargando archivo de audio con moviepy: {temp_filename}")
             audio_clip = AudioFileClip(temp_filename)
-            print("Audio cargado con moviepy") # Comprobar si llega a este punto
+            print(f"Archivo de audio cargado correctamente")
             clips_audio.append(audio_clip)
             duracion = audio_clip.duration
             
@@ -220,18 +213,14 @@ def create_simple_video(texto, nombre_salida, voz, logo_url, font_size, bg_color
             
             video_segment = txt_clip.set_audio(audio_clip.set_start(tiempo_acumulado))
             clips_finales.append(video_segment)
-           
+            
             tiempo_acumulado += duracion
-            """
-            tiempo_acumulado += 1 # Para simular que avanza el video
-            time.sleep(0.2) # Para que no se sobrecargue el sistema
+            time.sleep(0.2)
 
         # Añadir clip de suscripción
         subscribe_img = create_subscription_image(logo_url) # Usamos la función creada
         duracion_subscribe = 5
-        
-        # Desactivamos el código para añadir el clip de subscripción
-        """
+
         subscribe_clip = (ImageClip(subscribe_img)
                         .set_start(tiempo_acumulado)
                         .set_duration(duracion_subscribe)
@@ -251,7 +240,6 @@ def create_simple_video(texto, nombre_salida, voz, logo_url, font_size, bg_color
         )
         
         video_final.close()
-        """
         
         for clip in clips_audio:
             clip.close()
