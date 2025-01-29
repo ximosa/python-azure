@@ -142,6 +142,7 @@ def synthesize_azure(text, voice_name, output_file, subscription_key, region):
     synthesizer = SpeechSynthesizer(speech_config=speech_config, audio_config=audio_config)
     try:
         result = synthesizer.speak_text_async(text).get()
+        print(f"Resultado de la API de Azure: {result.reason}")  #  <--- AÑADIMOS ESTA LINEA
         if result.reason == 1: # SpeechSynthesisResult.Reason.SynthesizingAudioCompleted
            print(f"Audio guardado en {output_file}")
            return True, "Audio generado exitosamente"
