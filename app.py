@@ -40,8 +40,8 @@ VOCES_DISPONIBLES = {
     'es-ES-EncarnaNeural': 'FEMALE',
     'es-ES-AbrilNeural': 'FEMALE',
     'es-ES-ArnauNeural': 'MALE',
-    'es-ES-SaulNeural': 'MALE', # Ejemplo
-    'es-ES-IreneNeural': 'FEMALE', # Ejemplo
+    'es-ES-SaulNeural': 'MALE',
+    'es-ES-IreneNeural': 'FEMALE',
 }
 
 def create_text_image(text, size=IMAGE_SIZE_TEXT, font_size=DEFAULT_FONT_SIZE,
@@ -144,7 +144,7 @@ def synthesize_azure(text, voice_name, output_file, subscription_key, region):
     synthesizer = SpeechSynthesizer(speech_config=speech_config, audio_config=audio_config)
     try:
         result = synthesizer.speak_text_async(text).get()
-        print(f"Resultado de la API de Azure: {result.reason}")  #  <--- AÑADIMOS ESTA LINEA
+        print(f"Resultado de la API de Azure (completo): {result}")  # <-- Imprimir el objeto result completo
         if result.reason == 1: # SpeechSynthesisResult.Reason.SynthesizingAudioCompleted
            print(f"Audio guardado en {output_file}")
            return True, "Audio generado exitosamente"
@@ -186,7 +186,7 @@ def create_simple_video(texto, nombre_salida, voz, logo_url, font_size, bg_color
         for i, segmento in enumerate(segmentos_texto):
             logging.info(f"Procesando segmento {i+1} de {len(segmentos_texto)}")
             
-            temp_filename = f"temp_audio_{i}.wav"  # Azure genera archivos wav
+            temp_filename = f"temp_audio_{i}.mp3" # Cambiamos a MP3 para ver si hay incompatibilidad con WAV
             archivos_temp.append(temp_filename)
             
             # Usar la función de Azure para generar audio
@@ -196,8 +196,15 @@ def create_simple_video(texto, nombre_salida, voz, logo_url, font_size, bg_color
 
             if not success:
                 raise Exception(f"Error al generar audio: {message}")
-                
+            
+            print(f"Archivo de audio guardado en: {temp_filename}") # <-- Imprimir ruta del archivo de audio
+           
+            
+            # Desactivamos el código de moviepy para centrarnos en la API de Azure
+            """
+            print("Intentando cargar audio con moviepy...") # Comprobar si llega a este punto
             audio_clip = AudioFileClip(temp_filename)
+            print("Audio cargado con moviepy") # Comprobar si llega a este punto
             clips_audio.append(audio_clip)
             duracion = audio_clip.duration
             
@@ -213,14 +220,18 @@ def create_simple_video(texto, nombre_salida, voz, logo_url, font_size, bg_color
             
             video_segment = txt_clip.set_audio(audio_clip.set_start(tiempo_acumulado))
             clips_finales.append(video_segment)
-            
+           
             tiempo_acumulado += duracion
-            time.sleep(0.2)
+            """
+            tiempo_acumulado += 1 # Para simular que avanza el video
+            time.sleep(0.2) # Para que no se sobrecargue el sistema
 
         # Añadir clip de suscripción
         subscribe_img = create_subscription_image(logo_url) # Usamos la función creada
         duracion_subscribe = 5
-
+        
+        # Desactivamos el código para añadir el clip de subscripción
+        """
         subscribe_clip = (ImageClip(subscribe_img)
                         .set_start(tiempo_acumulado)
                         .set_duration(duracion_subscribe)
@@ -240,6 +251,7 @@ def create_simple_video(texto, nombre_salida, voz, logo_url, font_size, bg_color
         )
         
         video_final.close()
+        """
         
         for clip in clips_audio:
             clip.close()
