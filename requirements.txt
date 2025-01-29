@@ -1,6 +1,7 @@
 streamlit
-moviepy
+moviepy==1.0.3
 Pillow
 numpy
 requests
 azure-cognitiveservices-speech
+imageio-ffmpeg==0.4.9
