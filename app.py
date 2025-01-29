@@ -40,6 +40,8 @@ VOCES_DISPONIBLES = {
     'es-ES-EncarnaNeural': 'FEMALE',
     'es-ES-AbrilNeural': 'FEMALE',
     'es-ES-ArnauNeural': 'MALE',
+    'es-ES-SaulNeural': 'MALE', # Ejemplo
+    'es-ES-IreneNeural': 'FEMALE', # Ejemplo
 }
 
 def create_text_image(text, size=IMAGE_SIZE_TEXT, font_size=DEFAULT_FONT_SIZE,
